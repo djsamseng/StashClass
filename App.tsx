@@ -11,24 +11,55 @@ import {
 
 // @ts-ignore
 import { PieChart } from "react-native-svg-charts";
+import * as D3 from "react-native-svg";
 
 declare var global: { HermesInternal: null | {} };
 
 const App = () => {
-  const data = [ 50, 10, 40, 95, -4, -24, 85, 91, 35, 53, -53, 24, 50, -20, -80 ]
+  const colors = ["mediumseagreen", "gold", "dodgerblue", "firebrick"];
+  const randomColor = (index:number) => {
+    return colors[index % colors.length];
+  }
 
-  const randomColor = () => ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7)
-
+  const data:Array<number> = [];
+  for (let idx = 0; idx < 12; idx++) {
+    data.push(idx);
+  }
   const pieData = data
-      .filter(value => value > 0)
       .map((value, index) => ({
-          value,
+          value: 50,
           svg: {
-              fill: randomColor(),
+              fill: randomColor(index),
               onPress: () => console.log('press', index),
           },
           key: `pie-${index}`,
       }));
+  const Labels = ({ slices, height, width }) => {
+        return slices.map((slice:any, index:number) => {
+            const { labelCentroid, pieCentroid, data } = slice;
+            return (
+                <D3.G
+                    key={index}
+                    x={labelCentroid[ 0 ]}
+                    y={labelCentroid[ 1 ]}
+                >
+                    <D3.Circle
+                        r={18}
+                        fill={'white'}
+                    />
+                    <D3.Image
+                        x={-10}
+                        y={10}
+                        width={20}
+                        height={20}
+                        preserveAspectRatio="xMidYMid slice"
+                        opacity="1"
+                        // href={Images.memes[ index + 1 ]}
+                    />
+                </D3.G>
+            )
+        })
+    };
   return (
     <>
       <StatusBar barStyle="dark-content" />
@@ -37,7 +68,7 @@ const App = () => {
           contentInsetAdjustmentBehavior="automatic">
           <View
               style={{
-                backgroundColor: "green",
+                backgroundColor: "#DEE5CC",// "#4B6043", "#DEE5CC",
                 height: 500,
                 flex: 1,
               }}>
@@ -58,7 +89,9 @@ const App = () => {
             <PieChart
                   style={ { flex: 1 } }
                   data={ pieData }
-            />
+            >
+              <Labels/>
+            </PieChart>
           </View>
         </ScrollView>
       </SafeAreaView>
