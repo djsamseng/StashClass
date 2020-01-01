@@ -16,11 +16,13 @@ import { PieChart } from "react-native-svg-charts";
 import * as D3 from "react-native-svg";
 
 import FinancialStatement from "./FinancialStatement";
-import {IncomeEntry, ExpenseEntry, AssetEntry, LiabilityEntry} from "./FinancialState";
+import {IncomeEntry, ExpenseEntry, AssetEntry, LiabilityEntry, StockEntry} from "./FinancialState";
 import DonutBoard from "./DonutBoard";
+import StockMarket from "./StockMarket";
 
 type State = {
   showFinancialStatement:boolean,
+  showStockMarket:boolean,
   financialState:{
     cash:number,
     income:Array<IncomeEntry>,
@@ -30,30 +32,53 @@ type State = {
   }
 };
 
+function createFinancialState() {
+  const assets = [
+    new StockEntry({
+      numShares: 2,
+      pricePerShare: 300,
+      ticker: "AAPL",
+    }),
+    new AssetEntry(),
+    new StockEntry({
+      numShares: 5,
+      pricePerShare: 100,
+      ticker: "NFLX",
+    }),
+  ];
+  return {
+    cash: 5000,
+    income: [],
+    expenses: [],
+    assets,
+    liabilities: [],
+  };
+}
+
 export default class GameBoard extends React.Component<{},State> {
   constructor(props) {
     super(props);
     this.state = {
-      financialState: {
-        cash: 5000,
-        income: [],
-        expenses: [],
-        assets: [],
-        liabilities: [],
-      },
+      financialState: createFinancialState(),
       showFinancialStatement: false,
+      showStockMarket: false,
     }
   }
   render() {
+    const currCash = this.state.financialState.cash;
+    const cashFlow = this.state.financialState.assets.reduce((curSum, asset) => {
+      return curSum + asset.value;
+    }, 0) - this.state.financialState.liabilities.reduce((curSum, liability) => {
+      return curSum + liability.value;
+    }, 0);
     return (
       <View
           style={{
             backgroundColor: "#DEE5CC",// "#4B6043", "#DEE5CC",
-            height: 500,
             flex: 1,
           }}>
         <Modal
-            transparent={false}
+            transparent={true}
             visible={this.state.showFinancialStatement}>
           <FinancialStatement
               cash={this.state.financialState.cash}
@@ -64,6 +89,18 @@ export default class GameBoard extends React.Component<{},State> {
               onClose={() => {
                 this.setState({
                   showFinancialStatement: false,
+                });
+              }}/>
+        </Modal>
+        <Modal
+            transparent={true}
+            visible={this.state.showStockMarket}>
+          <StockMarket
+              cash={this.state.financialState.cash}
+              assets={this.state.financialState.assets}
+              onClose={() => {
+                this.setState({
+                  showStockMarket: false,
                 });
               }}/>
         </Modal>
@@ -81,14 +118,23 @@ export default class GameBoard extends React.Component<{},State> {
               }}/>
           <Button
               title="Stock Market"
-              onPress={() => {}}/>
+              onPress={() => {
+                this.setState({
+                  showStockMarket: true,
+                });
+              }}/>
         </View>
         <View
             style={{
               paddingLeft: 20,
             }}>
-          <Text>Cash: ${this.state.financialState.cash.toLocaleString()}</Text>
-          <Text>Net Worth: $7,500</Text>
+          <Text>Cash: ${currCash.toLocaleString()}</Text>
+          <Text
+              style={{
+                color: cashFlow > 0 ? "green" : "red",
+              }}>
+            Cash Flow: ${cashFlow.toLocaleString()}
+          </Text>
         </View>
         <View
             style={{

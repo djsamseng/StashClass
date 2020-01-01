@@ -14,30 +14,43 @@ import {
 // @ts-ignore
 import { PieChart } from "react-native-svg-charts";
 import * as D3 from "react-native-svg";
-import {IncomeEntry, ExpenseEntry, AssetEntry, LiabilityEntry} from "./FinancialState";
+import {AssetEntry, StockEntry} from "./FinancialState";
 
 
-type FinancialStatementProps = {
+type StockMarketProps = {
   cash:number,
-  income:Array<IncomeEntry>,
-  expenses:Array<ExpenseEntry>,
-  assets:Array<AssetEntry>
-  liabilities:Array<LiabilityEntry>
+  assets:Array<AssetEntry>,
   onClose:Function,
 };
 
 type State = {
-
+  userStocks:Array<StockEntry>,
 };
 
-export default class FinancialStatement extends React.Component<FinancialStatementProps,State> {
-  constructor(props) {
+export default class StockMarket extends React.Component<StockMarketProps,State> {
+  constructor(props:StockMarketProps) {
     super(props);
     this.state = {
-
+      userStocks: props.assets.filter(asset => {
+        if (asset instanceof StockEntry) {
+          return true;
+        }
+        return false;
+      })
+      .map(asset => {
+        return asset as StockEntry;
+      }),
     };
   }
   render() {
+    const userStocks = this.state.userStocks.map(stockEntry => {
+      return (
+        <Text
+            key={stockEntry.title}>
+          {stockEntry.title}
+        </Text>
+      )
+    });
     return (
       <View
           style={{
@@ -52,6 +65,7 @@ export default class FinancialStatement extends React.Component<FinancialStateme
             onPress={() => {
               this.props.onClose();
             }}/>
+        { userStocks }
       </View>
     );
   }

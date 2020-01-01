@@ -25,6 +25,20 @@ export class AssetEntry extends FinancialEntry {
   }
 }
 
+export class StockEntry extends AssetEntry{
+  public numShares:number;
+  constructor(args: {
+    numShares:number,
+    ticker:string,
+    pricePerShare:number,
+  }) {
+    super();
+    this.title = args.ticker;
+    this.numShares = args.numShares;
+    this.value = args.numShares * args.pricePerShare;
+  }
+}
+
 export class LiabilityEntry extends FinancialEntry {
   constructor() {
     super();

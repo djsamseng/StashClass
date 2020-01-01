@@ -22,11 +22,11 @@ const App = () => {
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic">
+      <SafeAreaView
+          style={{
+            flex: 1,
+          }}>
           <GameBoard />
-        </ScrollView>
       </SafeAreaView>
     </>
   );

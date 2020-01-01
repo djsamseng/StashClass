@@ -74,7 +74,9 @@ export default class DonutBoard extends React.Component<{},State> {
   render() {
     return (
       <PieChart
-          style={ { flex: 1 } }
+          style={{
+            flex: 1
+          }}
           data={ pieData }
           >
         <Labels/>
