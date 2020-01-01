@@ -45,6 +45,11 @@ function createFinancialState() {
       pricePerShare: 100,
       ticker: "NFLX",
     }),
+    new StockEntry({
+      numShares: 5,
+      pricePerShare: 100,
+      ticker: "NFLX2",
+    }),
   ];
   return {
     cash: 5000,

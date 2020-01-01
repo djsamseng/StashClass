@@ -1,9 +1,14 @@
+import { TouchableHighlightBase } from "react-native";
+
 class FinancialEntry {
   public title:string;
-  public value:number;
+  protected d_value:number;
   constructor() {
     this.title = "";
-    this.value = 0;
+    this.d_value = 0;
+  }
+  get value() {
+    return this.d_value;
   }
 }
 
@@ -27,6 +32,7 @@ export class AssetEntry extends FinancialEntry {
 
 export class StockEntry extends AssetEntry{
   public numShares:number;
+  private d_pricePerShare:number;
   constructor(args: {
     numShares:number,
     ticker:string,
@@ -35,7 +41,15 @@ export class StockEntry extends AssetEntry{
     super();
     this.title = args.ticker;
     this.numShares = args.numShares;
-    this.value = args.numShares * args.pricePerShare;
+    this.d_pricePerShare = args.pricePerShare;
+    this.d_value = args.numShares * args.pricePerShare;
+  }
+  get pricePerShare() {
+    return this.d_pricePerShare;
+  }
+  set pricePerShare(val) {
+    this.d_pricePerShare = val;
+    this.d_value = this.numShares * this.pricePerShare;
   }
 }
 
