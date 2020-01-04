@@ -14,43 +14,55 @@ import {
 // @ts-ignore
 import { PieChart } from "react-native-svg-charts";
 import * as D3 from "react-native-svg";
-import {AssetEntry, StockEntry} from "./FinancialState";
-
+import { FinancialState, StockState, OwnedStock } from "./FinancialState";
 
 type StockMarketProps = {
-  cash:number,
-  assets:Array<AssetEntry>,
+  financialState:FinancialState,
+  stockState:StockState,
+  turnNumber:number,
   onClose:Function,
 };
 
-type State = {
-  userStocks:Array<StockEntry>,
-};
-
-export default class StockMarket extends React.Component<StockMarketProps,State> {
+export default class StockMarket extends React.Component<StockMarketProps,{}> {
   constructor(props:StockMarketProps) {
     super(props);
-    this.state = {
-      userStocks: props.assets.filter(asset => {
-        if (asset instanceof StockEntry) {
-          return true;
-        }
-        return false;
-      })
-      .map(asset => {
-        return asset as StockEntry;
-      }),
-    };
+    this.state = {};
   }
   render() {
-    const userStocks = this.state.userStocks.map(stockEntry => {
+    const userStocks = this.props.financialState.ownedStocks.map(ownedStock => {
       return (
         <Text
-            key={stockEntry.title}>
-          {stockEntry.title}
+            key={ownedStock.title + ownedStock.purchaseTurn}>
+          {ownedStock.title}
         </Text>
       )
     });
+    const allStocks = Object.values(this.props.stockState.stocks).map(stock => {
+      return (
+        <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-start"
+            }}>
+          <Text
+              style={{
+                alignSelf:"center",
+              }}>
+            {stock.title}</Text>
+          <Button
+            title="Buy"
+            onPress={() => {
+              const purchaseStock = new OwnedStock({
+                stock,
+                numShares: 1,
+                purchaseTurn: this.props.turnNumber,
+              });
+              this.props.financialState.cash -= purchaseStock.value;
+              this.props.financialState.ownedStocks.push(purchaseStock);
+            }}/>
+        </View>
+      )
+    })
     return (
       <View
           style={{
@@ -66,6 +78,7 @@ export default class StockMarket extends React.Component<StockMarketProps,State>
               this.props.onClose();
             }}/>
         { userStocks }
+        { allStocks }
       </View>
     );
   }

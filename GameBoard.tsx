@@ -16,66 +16,78 @@ import { PieChart } from "react-native-svg-charts";
 import * as D3 from "react-native-svg";
 
 import FinancialStatement from "./FinancialStatement";
-import {IncomeEntry, ExpenseEntry, AssetEntry, LiabilityEntry, StockEntry} from "./FinancialState";
+import { FinancialState, StockState, Stock, OwnedStock } from "./FinancialState";
 import DonutBoard from "./DonutBoard";
 import StockMarket from "./StockMarket";
 
 type State = {
-  showFinancialStatement:boolean,
-  showStockMarket:boolean,
   financialState:{
     cash:number,
-    income:Array<IncomeEntry>,
-    expenses:Array<ExpenseEntry>,
-    assets:Array<AssetEntry>
-    liabilities:Array<LiabilityEntry>
-  }
+    cashFlow:number,
+  },
+  playerPosition:number,
+  showFinancialStatement:boolean,
+  showStockMarket:boolean,
+  turnNumber:number,
 };
 
-function createFinancialState() {
-  const assets = [
-    new StockEntry({
-      numShares: 2,
-      pricePerShare: 300,
-      ticker: "AAPL",
-    }),
-    new AssetEntry(),
-    new StockEntry({
-      numShares: 5,
-      pricePerShare: 100,
-      ticker: "NFLX",
-    }),
-    new StockEntry({
-      numShares: 5,
-      pricePerShare: 100,
-      ticker: "NFLX2",
-    }),
+function initState() {
+  const aapl = new Stock({
+    title: "AAPL",
+    pricePerShare: 300,
+  });
+  const nflx = new Stock({
+    title: "NFLX",
+    pricePerShare: 100,
+  });
+  const stockState = new StockState();
+  stockState.stocks[aapl.title] = aapl;
+  stockState.stocks[nflx.title] = nflx;
+  const financialState = new FinancialState();
+  const aapl1 = new OwnedStock({
+    stock: aapl,
+    numShares: 5,
+    purchaseTurn: 0,
+  });
+  const nflx1 = new OwnedStock({
+    stock: nflx,
+    numShares: 10,
+    purchaseTurn: 0,
+  });
+  financialState.ownedStocks = [
+    aapl1,
+    nflx1,
   ];
+  financialState.cash = 5000;
   return {
-    cash: 5000,
-    income: [],
-    expenses: [],
-    assets,
-    liabilities: [],
-  };
+    stockState,
+    financialState,
+  }
 }
 
 export default class GameBoard extends React.Component<{},State> {
+  private d_financialState:FinancialState;
+  private d_stockState:StockState;
   constructor(props) {
     super(props);
+    const state = initState();
+    this.d_stockState = state.stockState;
+    this.d_financialState = state.financialState;
+
     this.state = {
-      financialState: createFinancialState(),
+      financialState: {
+        cash: this.d_financialState.cash,
+        cashFlow: this.d_financialState.cashFlow,
+      },
+      playerPosition: 0,
       showFinancialStatement: false,
       showStockMarket: false,
+      turnNumber: 0,
     }
   }
   render() {
     const currCash = this.state.financialState.cash;
-    const cashFlow = this.state.financialState.assets.reduce((curSum, asset) => {
-      return curSum + asset.value;
-    }, 0) - this.state.financialState.liabilities.reduce((curSum, liability) => {
-      return curSum + liability.value;
-    }, 0);
+    const cashFlow = this.state.financialState.cashFlow;
     return (
       <View
           style={{
@@ -86,13 +98,13 @@ export default class GameBoard extends React.Component<{},State> {
             transparent={true}
             visible={this.state.showFinancialStatement}>
           <FinancialStatement
-              cash={this.state.financialState.cash}
-              income={this.state.financialState.income}
-              expenses={this.state.financialState.expenses}
-              assets={this.state.financialState.assets}
-              liabilities={this.state.financialState.liabilities}
+              financialState={this.d_financialState}
               onClose={() => {
                 this.setState({
+                  financialState: {
+                    cash: this.d_financialState.cash,
+                    cashFlow: this.d_financialState.cashFlow,
+                  },
                   showFinancialStatement: false,
                 });
               }}/>
@@ -101,10 +113,15 @@ export default class GameBoard extends React.Component<{},State> {
             transparent={true}
             visible={this.state.showStockMarket}>
           <StockMarket
-              cash={this.state.financialState.cash}
-              assets={this.state.financialState.assets}
+              financialState={this.d_financialState}
+              stockState={this.d_stockState}
+              turnNumber={this.state.turnNumber}
               onClose={() => {
                 this.setState({
+                  financialState: {
+                    cash: this.d_financialState.cash,
+                    cashFlow: this.d_financialState.cashFlow,
+                  },
                   showStockMarket: false,
                 });
               }}/>
@@ -131,7 +148,8 @@ export default class GameBoard extends React.Component<{},State> {
         </View>
         <View
             style={{
-              paddingLeft: 20,
+              flexDirection: "row",
+              justifyContent: "space-around"
             }}>
           <Text>Cash: ${currCash.toLocaleString()}</Text>
           <Text
@@ -141,6 +159,7 @@ export default class GameBoard extends React.Component<{},State> {
             Cash Flow: ${cashFlow.toLocaleString()}
           </Text>
         </View>
+        {/*
         <View
             style={{
               alignSelf: "flex-start",
@@ -153,8 +172,50 @@ export default class GameBoard extends React.Component<{},State> {
                 transform: [{rotate:"45deg"}]
               }}>Test</Text>
         </View>
-        <DonutBoard />
+        */}
+        <DonutBoard
+            playerPosition={this.state.playerPosition}/>
+        <View
+            style={{
+              alignItems: "center",
+            }}>
+          { this._getTaxDayText() }
+          <Button
+              title="Roll"
+              onPress={this._roll.bind(this)}/>
+        </View>
       </View>
+    );
+  }
+
+  private _roll() {
+    const increment = Math.ceil(Math.random() * 6);
+    const newPosition = (this.state.playerPosition + increment) % 8;
+    this.d_financialState.cash += this.d_financialState.cashFlow;
+    if (this.state.turnNumber === 11) {
+    }
+    this.setState({
+      financialState: {
+        cash: this.d_financialState.cash,
+        cashFlow: this.d_financialState.cashFlow,
+      },
+      playerPosition: newPosition,
+      turnNumber: this.state.turnNumber + 1,
+    });
+  }
+
+  private _getTaxDayText() {
+    const isTaxDay = this.state.turnNumber % 12 === 11;
+    const text =  isTaxDay?
+      `Taxes due today` :
+      `Tax day in ${12 - this.state.turnNumber % 12} turns`;
+    return (
+      <Text
+          style={{
+            fontSize: isTaxDay ? 18 : 18,
+          }}>
+        {text}
+      </Text>
     );
   }
 };

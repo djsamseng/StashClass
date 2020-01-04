@@ -15,15 +15,11 @@ import {
 // @ts-ignore
 import { PieChart } from "react-native-svg-charts";
 import * as D3 from "react-native-svg";
-import {IncomeEntry, ExpenseEntry, AssetEntry, LiabilityEntry, StockEntry} from "./FinancialState";
+import { FinancialState } from "./FinancialState";
 
 
 type FinancialStatementProps = {
-  cash:number,
-  income:Array<IncomeEntry>,
-  expenses:Array<ExpenseEntry>,
-  assets:Array<AssetEntry>
-  liabilities:Array<LiabilityEntry>
+  financialState:FinancialState,
   onClose:Function,
 };
 
@@ -31,6 +27,9 @@ type State = {
 
 };
 
+// Should make this really simple with the ability to get more complicated
+// Difficulty level? - Money in Money out
+// more difficult will have stocks, assets, taxes, capital gain etc.
 export default class FinancialStatement extends React.Component<FinancialStatementProps,State> {
   constructor(props) {
     super(props);
@@ -39,12 +38,8 @@ export default class FinancialStatement extends React.Component<FinancialStateme
     };
   }
   render() {
-    const currCash = this.props.cash;
-    const cashFlow = this.props.assets.reduce((curSum, asset) => {
-      return curSum + asset.value;
-    }, 0) - this.props.liabilities.reduce((curSum, liability) => {
-      return curSum + liability.value;
-    }, 0);
+    const currCash = this.props.financialState.cash;
+    const cashFlow = this.props.financialState.cashFlow;
 
     const assetView = (
       <View
@@ -57,9 +52,7 @@ export default class FinancialStatement extends React.Component<FinancialStateme
             }}>
           Stocks
         </Text>
-        {this.props.assets
-          .filter(asset => asset instanceof StockEntry)
-          .map(asset => asset as StockEntry)
+        {this.props.financialState.ownedStocks
           .map(stock => {
             return (
               <View

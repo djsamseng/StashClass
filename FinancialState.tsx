@@ -1,60 +1,68 @@
-import { TouchableHighlightBase } from "react-native";
-
-class FinancialEntry {
+export class Stock {
   public title:string;
-  protected d_value:number;
-  constructor() {
-    this.title = "";
-    this.d_value = 0;
-  }
-  get value() {
-    return this.d_value;
-  }
-}
-
-export class IncomeEntry extends FinancialEntry {
-  constructor() {
-    super();
-  }
-}
-
-export class ExpenseEntry extends FinancialEntry {
-  constructor() {
-    super();
-  }
-}
-
-export class AssetEntry extends FinancialEntry {
-  constructor() {
-    super();
-  }
-}
-
-export class StockEntry extends AssetEntry{
-  public numShares:number;
-  private d_pricePerShare:number;
+  public pricePerShare:number;
   constructor(args: {
-    numShares:number,
-    ticker:string,
+    title:string,
     pricePerShare:number,
   }) {
-    super();
-    this.title = args.ticker;
-    this.numShares = args.numShares;
-    this.d_pricePerShare = args.pricePerShare;
-    this.d_value = args.numShares * args.pricePerShare;
-  }
-  get pricePerShare() {
-    return this.d_pricePerShare;
-  }
-  set pricePerShare(val) {
-    this.d_pricePerShare = val;
-    this.d_value = this.numShares * this.pricePerShare;
+    this.title = args.title;
+    this.pricePerShare = args.pricePerShare;
   }
 }
 
-export class LiabilityEntry extends FinancialEntry {
+export class OwnedStock {
+  public d_stock:Stock;
+  private d_numShares:number;
+  private d_purchaseTurn:number;
+  private d_purchasePrice:number;
+  constructor(args:{
+    stock:Stock,
+    numShares:number,
+    purchaseTurn:number,
+  }) {
+    this.d_numShares = args.numShares;
+    this.d_purchasePrice = args.stock.pricePerShare;
+    this.d_purchaseTurn = args.purchaseTurn;
+    this.d_stock = args.stock;
+  }
+  get numShares() {
+    return this.d_numShares;
+  }
+  get pricePerShare() {
+    return this.d_stock.pricePerShare;
+  }
+  get purchaseTurn() {
+    return this.d_purchaseTurn;
+  }
+  get title() {
+    return this.d_stock.title;
+  }
+  get value() {
+    return this.d_stock.pricePerShare * this.d_numShares;
+  }
+}
+export class FinancialState {
+  public ownedStocks:Array<OwnedStock>;
+  public cash:number;
+  // loans
+  // other liabilities
+
+  // real estate
+  // other assets
   constructor() {
-    super();
+    this.ownedStocks = [];
+    this.cash = 0;
+  }
+  get cashFlow() {
+    return this.ownedStocks.reduce((sum, stock) => {
+      return sum + stock.value;
+    }, 0);
+  }
+}
+
+export class StockState {
+  public stocks:Record<string,Stock>;
+  constructor() {
+    this.stocks = {};
   }
 }
